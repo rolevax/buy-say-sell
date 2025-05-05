@@ -7,12 +7,22 @@ import {BuySaySell} from "../src/BuySaySell.sol";
 contract BuySaySellTest is Test {
     BuySaySell public bss;
 
+    address USER = makeAddr("alice");
+
     function setUp() public {
         bss = new BuySaySell();
     }
 
     function test_createStory() public {
-        bss.createStory("PHP is the best programming language in the world!");
-        // assertEq(bss.(), 1);
+        vm.prank(USER);
+
+        bss.createStory("aaa");
+        BuySaySell.Story[] memory stories = bss.getStories();
+        assertEq(stories.length, 1);
+
+        BuySaySell.Story memory s = stories[0];
+        assertEq(s.owner, USER);
+        assertEq(s.comments[0].content, "aaa");
+        assertEq(s.comments[0].owner, USER);
     }
 }

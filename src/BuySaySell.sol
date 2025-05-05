@@ -2,20 +2,32 @@
 pragma solidity ^0.8.28;
 
 contract BuySaySell {
-    uint256 private s_nextID;
     Story[] private s_stories;
 
+    struct Comment {
+        address owner;
+        string content;
+    }
+
     struct Story {
-        uint256 id;
-        string[] contents;
+        uint256 index;
+        address owner;
+        Comment[] comments;
     }
 
     function createStory(string memory content) public {
-        Story memory story;
-        story.id = s_nextID++;
-        story.contents = new string[](1);
-        story.contents[0] = content;
+        Story storage story = s_stories.push();
 
-        s_stories.push(story);
+        story.index = s_stories.length;
+        story.owner = msg.sender;
+
+        story.comments.push(Comment({
+            owner: msg.sender,
+            content: content
+        }));
+    }
+
+    function getStories() public view returns(Story[] memory) {
+        return s_stories;
     }
 }
