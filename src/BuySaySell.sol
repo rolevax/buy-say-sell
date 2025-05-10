@@ -13,7 +13,7 @@ contract BuySaySell {
 
     error UserArgError();
     error OwnerError();
-    error NotSaidError();
+    error SaidStateError();
     error PriceError();
     error TransferError();
 
@@ -38,6 +38,27 @@ contract BuySaySell {
         }));
     }
 
+    function addComment(uint256 storyIndex, string memory content) public {
+        if (storyIndex >= s_stories.length) {
+            revert UserArgError();
+        }
+
+        Story storage story = s_stories[storyIndex];
+        if (story.owner != msg.sender) {
+            revert OwnerError();
+        }
+
+        uint256 last = story.comments.length - 1;
+        if (story.comments[last].owner == msg.sender) {
+            revert SaidStateError();
+        }
+
+        story.comments.push(Comment({
+            owner: msg.sender,
+            content: content
+        }));
+    }
+
     function offerSellPrice(uint256 storyIndex, uint256 price) public {
         if (price == 0) {
             revert UserArgError();
@@ -54,7 +75,7 @@ contract BuySaySell {
 
         uint256 last = story.comments.length - 1;
         if (story.comments[last].owner != msg.sender) {
-            revert NotSaidError();
+            revert SaidStateError();
         }
 
         story.sellPrice = price;
@@ -76,7 +97,7 @@ contract BuySaySell {
 
         uint256 last = story.comments.length - 1;
         if (story.comments[last].owner != story.owner) {
-            revert NotSaidError();
+            revert SaidStateError();
         }
 
         if (price <= story.buyPrice) {

@@ -75,4 +75,16 @@ contract BuySaySellTest is Test {
         assertEq(s.buyer, address(0));
         assertEq(user1Balance2 - user1Balance1, 123);
     }
+
+    function test_addComment() public {
+        test_agreeSell();
+
+        vm.prank(USER2);
+        bss.addComment(0, "bbb");
+
+        BuySaySell.Story[] memory stories = bss.getStories();
+        BuySaySell.Story memory s = stories[0];
+        assertEq(s.comments[1].content, "bbb");
+        assertEq(s.comments[1].owner, USER2);
+    }
 }
