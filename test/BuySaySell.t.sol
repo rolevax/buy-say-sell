@@ -20,58 +20,41 @@ contract BuySaySellTest is Test {
     function test_createStory() public {
         vm.prank(USER1);
 
-        bss.createStory("aaa");
+        bss.createStory("aaa", 114514);
         BuySaySell.Story[] memory stories = bss.getStories();
         assertEq(stories.length, 1);
 
         BuySaySell.Story memory s = stories[0];
         assertEq(s.owner, USER1);
+        assertEq(s.sellPrice, 114514);
         assertEq(s.comments[0].content, "aaa");
         assertEq(s.comments[0].owner, USER1);
     }
 
-    function test_offerSell() public {
+    function test_changeSellPrice() public {
         vm.startPrank(USER1);
 
-        bss.createStory("aaa");
-        bss.offerSellPrice(0, 123);
+        bss.createStory("aaa", 1);
+        bss.changeSellPrice(0, 123);
 
         vm.stopPrank();
 
-        BuySaySell.Story[] memory stories = bss.getStories();
-        BuySaySell.Story memory s = stories[0];
+        BuySaySell.Story memory s = bss.getStory(0);
         assertEq(s.sellPrice, 123);
-    }
-
-    function test_offerBuy() public {
-        vm.prank(USER1);
-        bss.createStory("aaa");
-
-        vm.prank(USER2);
-        bss.offerBuyPrice(0, 123);
-
-        BuySaySell.Story[] memory stories = bss.getStories();
-        BuySaySell.Story memory s = stories[0];
-        assertEq(s.buyPrice, 123);
-        assertEq(s.buyer, USER2);
     }
 
     function test_agreeSell() public {
         vm.prank(USER1);
-        bss.createStory("aaa");
-        vm.prank(USER1);
-        bss.offerSellPrice(0, 123);
+        bss.createStory("aaa", 123);
 
         vm.prank(USER2);
         uint256 user1Balance1 = USER1.balance;
         bss.agreeSellPrice{value: 123}(0);
         uint256 user1Balance2 = USER1.balance;
 
-        BuySaySell.Story[] memory stories = bss.getStories();
-        BuySaySell.Story memory s = stories[0];
+        BuySaySell.Story memory s = bss.getStory(0);
         assertEq(s.owner, USER2);
         assertEq(s.sellPrice, 0);
-        assertEq(s.buyPrice, 0);
         assertEq(s.buyer, address(0));
         assertEq(user1Balance2 - user1Balance1, 123);
     }
@@ -80,10 +63,10 @@ contract BuySaySellTest is Test {
         test_agreeSell();
 
         vm.prank(USER2);
-        bss.addComment(0, "bbb");
+        bss.addComment(0, "bbb", 114514);
 
-        BuySaySell.Story[] memory stories = bss.getStories();
-        BuySaySell.Story memory s = stories[0];
+        BuySaySell.Story memory s = bss.getStory(0);
+        assertEq(s.sellPrice, 114514);
         assertEq(s.comments[1].content, "bbb");
         assertEq(s.comments[1].owner, USER2);
     }
