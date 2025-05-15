@@ -9,6 +9,8 @@ contract BuySaySell {
     struct Comment {
         address owner;
         string content;
+        uint256 price;
+        bool isLog;
     }
 
     error UserArgError();
@@ -21,8 +23,8 @@ contract BuySaySell {
         uint256 index;
         address owner;
         uint256 sellPrice;
-        address buyer;
         Comment[] comments;
+        bool said;
     }
 
     function createStory(string memory content, uint256 price) public {
@@ -35,8 +37,16 @@ contract BuySaySell {
         story.index = s_stories.length - 1;
         story.owner = msg.sender;
         story.sellPrice = price;
+        story.said = true;
 
-        story.comments.push(Comment({owner: msg.sender, content: content}));
+        story.comments.push(
+            Comment({
+                owner: msg.sender,
+                content: content,
+                price: price,
+                isLog: false
+            })
+        );
     }
 
     function addComment(
@@ -53,13 +63,20 @@ contract BuySaySell {
             revert OwnerError();
         }
 
-        uint256 last = story.comments.length - 1;
-        if (story.comments[last].owner == msg.sender) {
+        if (story.said) {
             revert SaidStateError();
         }
 
-        story.comments.push(Comment({owner: msg.sender, content: content}));
+        story.comments.push(
+            Comment({
+                owner: msg.sender,
+                content: content,
+                price: price,
+                isLog: false
+            })
+        );
         story.sellPrice = price;
+        story.said = true;
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
@@ -76,12 +93,19 @@ contract BuySaySell {
             revert OwnerError();
         }
 
-        uint256 last = story.comments.length - 1;
-        if (story.comments[last].owner != msg.sender) {
+        if (!story.said) {
             revert SaidStateError();
         }
 
         story.sellPrice = price;
+        story.comments.push(
+            Comment({
+                owner: msg.sender,
+                content: "change-price",
+                price: price,
+                isLog: true
+            })
+        );
     }
 
     function agreeSellPrice(uint256 storyIndex) public payable {
@@ -106,8 +130,16 @@ contract BuySaySell {
         }
 
         story.sellPrice = 0;
-        story.buyer = address(0);
         story.owner = msg.sender;
+        story.said = false;
+        story.comments.push(
+            Comment({
+                owner: msg.sender,
+                content: "buy",
+                price: price,
+                isLog: true
+            })
+        );
     }
 
     function getStories() public view returns (Story[] memory) {

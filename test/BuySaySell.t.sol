@@ -55,7 +55,6 @@ contract BuySaySellTest is Test {
         BuySaySell.Story memory s = bss.getStory(0);
         assertEq(s.owner, USER2);
         assertEq(s.sellPrice, 0);
-        assertEq(s.buyer, address(0));
         assertEq(user1Balance2 - user1Balance1, 123);
     }
 
@@ -67,7 +66,7 @@ contract BuySaySellTest is Test {
 
         BuySaySell.Story memory s = bss.getStory(0);
         assertEq(s.sellPrice, 114514);
-        assertEq(s.comments[1].content, "bbb");
-        assertEq(s.comments[1].owner, USER2);
+        assertEq(s.comments[2].content, "bbb");
+        assertEq(s.comments[2].owner, USER2);
     }
 }
