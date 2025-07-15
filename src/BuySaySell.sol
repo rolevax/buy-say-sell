@@ -2,8 +2,9 @@
 pragma solidity ^0.8.28;
 
 import {console} from "forge-std/Test.sol";
+import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
-contract BuySaySell {
+contract BuySaySell is ERC721 {
     Story[] private s_stories;
 
     struct Comment {
@@ -25,6 +26,10 @@ contract BuySaySell {
         uint256 sellPrice;
         Comment[] comments;
         bool said;
+    }
+
+    constructor() ERC721("Buy Say Sell", "BSS") {
+        //
     }
 
     function createStory(string memory content, uint256 price) public {
