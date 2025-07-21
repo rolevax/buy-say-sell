@@ -10,5 +10,8 @@ KEY5=0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
 KEY6=0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e
 
 CONTRACT='0x5FbDB2315678afecb367f032d93F642f64180aa3' 
+RPC=http://127.0.0.1:8545
 
-forge script script/BuySaySell.s.sol --rpc-url 127.0.0.1:8545 --broadcast --private-key $KEY0
+forge script script/BuySaySell.s.sol --rpc-url $RPC --broadcast --private-key $KEY0
+cast send $CONTRACT "createStory(string, uint256)" '这里是奶龙的真爱楼，有爱的天天来顶' 2000000000 --rpc-url $RPC --private-key $KEY0
+
