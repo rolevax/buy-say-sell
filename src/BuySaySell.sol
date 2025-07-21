@@ -49,6 +49,8 @@ contract BuySaySell is ERC721 {
                 isLog: false
             })
         );
+
+        _safeMint(story.owner, story.index);
     }
 
     function addComment(
@@ -132,6 +134,8 @@ contract BuySaySell is ERC721 {
                 isLog: true
             })
         );
+
+        _safeTransfer(prevOwner, story.owner, story.index);
     }
 
     function getStories() public view returns (Story[] memory) {
