@@ -16,7 +16,6 @@ contract BuySaySell is ERC721 {
 
     error UserArgError();
     error OwnerError();
-    error SaidStateError();
     error PriceError();
     error TransferError();
 
@@ -25,7 +24,6 @@ contract BuySaySell is ERC721 {
         address owner;
         uint256 sellPrice;
         Comment[] comments;
-        bool said;
     }
 
     constructor() ERC721("Buy Say Sell", "BSS") {
@@ -42,7 +40,6 @@ contract BuySaySell is ERC721 {
         story.index = s_stories.length - 1;
         story.owner = msg.sender;
         story.sellPrice = price;
-        story.said = true;
 
         story.comments.push(
             Comment({
@@ -68,10 +65,6 @@ contract BuySaySell is ERC721 {
             revert OwnerError();
         }
 
-        if (story.said) {
-            revert SaidStateError();
-        }
-
         story.comments.push(
             Comment({
                 owner: msg.sender,
@@ -81,7 +74,6 @@ contract BuySaySell is ERC721 {
             })
         );
         story.sellPrice = price;
-        story.said = true;
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
@@ -96,10 +88,6 @@ contract BuySaySell is ERC721 {
         Story storage story = s_stories[storyIndex];
         if (story.owner != msg.sender) {
             revert OwnerError();
-        }
-
-        if (!story.said) {
-            revert SaidStateError();
         }
 
         story.sellPrice = price;
@@ -136,7 +124,6 @@ contract BuySaySell is ERC721 {
 
         story.sellPrice = 0;
         story.owner = msg.sender;
-        story.said = false;
         story.comments.push(
             Comment({
                 owner: msg.sender,
