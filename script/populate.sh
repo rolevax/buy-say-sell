@@ -3,6 +3,7 @@
 A2=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
 
 KEY0=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+KEY1=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
 KEY2=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
 KEY3=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6
 KEY4=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
@@ -13,5 +14,8 @@ CONTRACT='0x5FbDB2315678afecb367f032d93F642f64180aa3'
 RPC=http://127.0.0.1:8545
 
 forge script script/BuySaySell.s.sol --rpc-url $RPC --broadcast --private-key $KEY0
-cast send $CONTRACT "createStory(string, uint256)" '这里是奶龙的真爱楼，有爱的天天来顶' 2000000000 --rpc-url $RPC --private-key $KEY0
+cast send $CONTRACT "createStory(string, uint256)" 'anvil test post 1' 2000000000 --rpc-url $RPC --private-key $KEY0
+cast send $CONTRACT "createStory(string, uint256)" 'anvil test post 2' 2000000000 --rpc-url $RPC --private-key $KEY1
+cast send $CONTRACT "addComment(uint256, string, uint256)" 0 'user 0 comment 1' 2000000000 --rpc-url $RPC --private-key $KEY0
+cast send $CONTRACT "agreeSellPrice(uint256)" 0 --value 2000000000 --rpc-url $RPC --private-key $KEY1
 
