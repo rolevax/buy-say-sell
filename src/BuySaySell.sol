@@ -58,7 +58,7 @@ contract BuySaySell is ERC721 {
         string memory content,
         uint256 price
     ) public {
-        if (storyIndex >= s_stories.length || price == 0) {
+        if (storyIndex >= s_stories.length) {
             revert UserArgError();
         }
 
@@ -79,10 +79,6 @@ contract BuySaySell is ERC721 {
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
-        if (price == 0) {
-            revert UserArgError();
-        }
-
         if (storyIndex >= s_stories.length) {
             revert UserArgError();
         }
