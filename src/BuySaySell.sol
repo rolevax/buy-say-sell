@@ -31,10 +31,6 @@ contract BuySaySell is ERC721 {
     }
 
     function createStory(string memory content, uint256 price) public {
-        if (price == 0) {
-            revert UserArgError();
-        }
-
         Story storage story = s_stories.push();
 
         story.index = s_stories.length - 1;
