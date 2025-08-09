@@ -11,6 +11,7 @@ contract BuySaySell is ERC721 {
         address owner;
         string content;
         uint256 price;
+        uint256 timestamp;
         bool isLog;
     }
 
@@ -42,6 +43,7 @@ contract BuySaySell is ERC721 {
                 owner: msg.sender,
                 content: content,
                 price: price,
+                timestamp: block.timestamp,
                 isLog: false
             })
         );
@@ -68,6 +70,7 @@ contract BuySaySell is ERC721 {
                 owner: msg.sender,
                 content: content,
                 price: price,
+                timestamp: block.timestamp,
                 isLog: false
             })
         );
@@ -90,6 +93,7 @@ contract BuySaySell is ERC721 {
                 owner: msg.sender,
                 content: "change-price",
                 price: price,
+                timestamp: block.timestamp,
                 isLog: true
             })
         );
@@ -123,6 +127,7 @@ contract BuySaySell is ERC721 {
                 owner: msg.sender,
                 content: "buy",
                 price: price,
+                timestamp: block.timestamp,
                 isLog: true
             })
         );
