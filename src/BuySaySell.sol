@@ -3,9 +3,11 @@ pragma solidity ^0.8.28;
 
 import {console} from "forge-std/Test.sol";
 import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import "./List.sol";
 
 contract BuySaySell is ERC721 {
     Story[] private s_stories;
+    List.Entry private s_list;
 
     struct Comment {
         address owner;
@@ -28,7 +30,7 @@ contract BuySaySell is ERC721 {
     }
 
     constructor() ERC721("Buy Say Sell", "BSS") {
-        //
+        List.init(s_list);
     }
 
     function createStory(string memory content, uint256 price) public {
@@ -49,6 +51,8 @@ contract BuySaySell is ERC721 {
         );
 
         _safeMint(story.owner, story.index);
+
+        List.insertHead(s_list);
     }
 
     function addComment(
@@ -75,6 +79,8 @@ contract BuySaySell is ERC721 {
             })
         );
         story.sellPrice = price;
+
+        List.moveToHead(s_list, storyIndex);
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
@@ -97,6 +103,12 @@ contract BuySaySell is ERC721 {
                 isLog: true
             })
         );
+
+        if (price == 0) {
+            List.remove(s_list, storyIndex);
+        } else {
+            List.moveToHead(s_list, storyIndex);
+        }
     }
 
     function agreeSellPrice(uint256 storyIndex) public payable {
@@ -133,10 +145,19 @@ contract BuySaySell is ERC721 {
         );
 
         _safeTransfer(prevOwner, story.owner, story.index);
+
+        List.remove(s_list, storyIndex);
     }
 
     function getStories() public view returns (Story[] memory) {
-        return s_stories;
+        (uint256[] memory indices, uint256 size) = List.get(s_list, 0, 10);
+
+        Story[] memory result = new Story[](size);
+        for (uint256 i = 0; i < size; i++) {
+            result[i] = s_stories[indices[i]];
+        }
+
+        return result;
     }
 
     function getStory(uint256 index) public view returns (Story memory) {
