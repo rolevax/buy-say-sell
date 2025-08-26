@@ -46,6 +46,10 @@ library List {
 
         entry.nodes[index].prev = nullIndex;
         entry.nodes[index].next = entry.head;
+        if (entry.head != nullIndex) {
+            entry.nodes[entry.head].prev = index;
+        }
+
         entry.head = index;
     }
 

@@ -133,4 +133,40 @@ contract ListTest is Test {
         (res, size) = List.get(list, 5, 0);
         assertEq(size, 0);
     }
+
+    function test_complex() public {
+        List.insertHead(list);
+        List.insertHead(list);
+        List.moveToHead(list, 0);
+
+        // [0, 1]
+        (uint256[] memory res, uint256 size) = List.get(list, 0, 10);
+        assertEq(size, 2, "a");
+        assertEq(res[0], 0, "a");
+        assertEq(res[1], 1, "a");
+
+        List.remove(list, 1);
+
+        // [0]
+        (res, size) = List.get(list, 0, 10);
+        assertEq(size, 1, "b");
+        assertEq(res[0], 0, "b");
+
+        List.moveToHead(list, 1);
+
+        // [1, 0]
+        (res, size) = List.get(list, 0, 10);
+        assertEq(size, 2, "c");
+        assertEq(res[0], 1, "c");
+        assertEq(res[1], 0, "c");
+
+        List.insertHead(list);
+
+        // [2, 1, 0]
+        (res, size) = List.get(list, 0, 10);
+        assertEq(size, 3, "d");
+        assertEq(res[0], 2, "d");
+        assertEq(res[1], 1, "d");
+        assertEq(res[2], 0, "d");
+    }
 }
