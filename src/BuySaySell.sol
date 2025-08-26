@@ -149,8 +149,15 @@ contract BuySaySell is ERC721 {
         List.remove(s_list, storyIndex);
     }
 
-    function getStories() public view returns (Story[] memory) {
-        (uint256[] memory indices, uint256 size) = List.get(s_list, 0, 10);
+    function getStories(
+        uint256 offset,
+        uint256 length
+    ) public view returns (Story[] memory) {
+        (uint256[] memory indices, uint256 size) = List.get(
+            s_list,
+            offset,
+            length
+        );
 
         Story[] memory result = new Story[](size);
         for (uint256 i = 0; i < size; i++) {

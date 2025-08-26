@@ -21,7 +21,7 @@ contract BuySaySellTest is Test {
         vm.prank(USER1);
 
         bss.createStory("aaa", 114514);
-        BuySaySell.Story[] memory stories = bss.getStories();
+        BuySaySell.Story[] memory stories = bss.getStories(0, 10);
         assertEq(stories.length, 1);
 
         BuySaySell.Story memory s = stories[0];

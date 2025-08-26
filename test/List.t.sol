@@ -126,5 +126,11 @@ contract ListTest is Test {
         assertEq(size, 2);
         assertEq(res[0], 6);
         assertEq(res[1], 5);
+
+        (res, size) = List.get(list, 10, 20);
+        assertEq(size, 0);
+
+        (res, size) = List.get(list, 5, 0);
+        assertEq(size, 0);
     }
 }
