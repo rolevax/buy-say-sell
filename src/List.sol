@@ -6,6 +6,7 @@ library List {
 
     struct Entry {
         uint256 head;
+        uint256 size;
         Node[] nodes;
     }
 
@@ -26,6 +27,7 @@ library List {
         }
 
         entry.head = entry.nodes.length - 1;
+        entry.size++;
     }
 
     function moveToHead(Entry storage entry, uint256 index) public {
@@ -51,6 +53,9 @@ library List {
         }
 
         entry.head = index;
+        if (prev == nullIndex && next == nullIndex) {
+            entry.size++;
+        }
     }
 
     function remove(Entry storage entry, uint256 index) public {
@@ -70,6 +75,8 @@ library List {
         if (index == entry.head) {
             entry.head = next;
         }
+
+        entry.size--;
     }
 
     function get(

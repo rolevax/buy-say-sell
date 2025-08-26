@@ -152,7 +152,7 @@ contract BuySaySell is ERC721 {
     function getStories(
         uint256 offset,
         uint256 length
-    ) public view returns (Story[] memory) {
+    ) public view returns (Story[] memory data, uint256 total) {
         (uint256[] memory indices, uint256 size) = List.get(
             s_list,
             offset,
@@ -164,7 +164,7 @@ contract BuySaySell is ERC721 {
             result[i] = s_stories[indices[i]];
         }
 
-        return result;
+        return (result, s_list.size);
     }
 
     function getStory(uint256 index) public view returns (Story memory) {
