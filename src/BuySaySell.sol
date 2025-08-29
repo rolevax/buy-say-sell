@@ -8,6 +8,7 @@ import "./List.sol";
 contract BuySaySell is ERC721 {
     Story[] private s_stories;
     List.Entry private s_list;
+    mapping(address owner => uint256[]) private s_balances;
 
     struct Comment {
         address owner;
@@ -53,6 +54,7 @@ contract BuySaySell is ERC721 {
         _safeMint(story.owner, story.index);
 
         List.insertHead(s_list);
+        s_balances[story.owner].push(story.index);
     }
 
     function addComment(
@@ -147,6 +149,16 @@ contract BuySaySell is ERC721 {
         _safeTransfer(prevOwner, story.owner, story.index);
 
         List.remove(s_list, storyIndex);
+
+        s_balances[story.owner].push(storyIndex);
+        uint256[] storage prevList = s_balances[prevOwner];
+        for (uint256 i = 0; i < prevList.length; i++) {
+            if (prevList[i] == storyIndex) {
+                prevList[i] = prevList[prevList.length - 1];
+                prevList.pop();
+                break;
+            }
+        }
     }
 
     function getStories(
@@ -173,5 +185,22 @@ contract BuySaySell is ERC721 {
         }
 
         return s_stories[index];
+    }
+
+    function getBalance(
+        address owner,
+        uint256 offset,
+        uint256 length
+    ) public view returns (Story[] memory data, uint256 total) {
+        uint256[] storage list = s_balances[owner];
+        Story[] memory result = new Story[](
+            list.length - offset > length ? length : list.length - offset
+        );
+
+        for (uint256 i = 0; i < length && i + offset < list.length; i++) {
+            result[i] = s_stories[list[i + offset]];
+        }
+
+        return (result, list.length);
     }
 }
