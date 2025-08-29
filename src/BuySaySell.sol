@@ -81,7 +81,9 @@ contract BuySaySell is ERC721 {
         );
         story.sellPrice = price;
 
-        List.moveToHead(sList, storyIndex);
+        if (price > 0) {
+            List.moveToHead(sList, storyIndex);
+        }
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
