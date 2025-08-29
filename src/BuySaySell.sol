@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {console} from "forge-std/Test.sol";
 import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
-import "./List.sol";
+import {List} from "./List.sol";
 
 contract BuySaySell is ERC721 {
-    Story[] private s_stories;
-    List.Entry private s_list;
-    mapping(address owner => uint256[]) private s_balances;
+    Story[] private sStories;
+    List.Entry private sList;
+    mapping(address owner => uint256[]) private sBalances;
 
     struct Comment {
         address owner;
@@ -31,13 +30,13 @@ contract BuySaySell is ERC721 {
     }
 
     constructor() ERC721("Buy Say Sell", "BSS") {
-        List.init(s_list);
+        List.init(sList);
     }
 
     function createStory(string memory content, uint256 price) public {
-        Story storage story = s_stories.push();
+        Story storage story = sStories.push();
 
-        story.index = s_stories.length - 1;
+        story.index = sStories.length - 1;
         story.owner = msg.sender;
         story.sellPrice = price;
 
@@ -53,8 +52,8 @@ contract BuySaySell is ERC721 {
 
         _safeMint(story.owner, story.index);
 
-        List.insertHead(s_list);
-        s_balances[story.owner].push(story.index);
+        List.insertHead(sList);
+        sBalances[story.owner].push(story.index);
     }
 
     function addComment(
@@ -62,11 +61,11 @@ contract BuySaySell is ERC721 {
         string memory content,
         uint256 price
     ) public {
-        if (storyIndex >= s_stories.length) {
+        if (storyIndex >= sStories.length) {
             revert UserArgError();
         }
 
-        Story storage story = s_stories[storyIndex];
+        Story storage story = sStories[storyIndex];
         if (story.owner != msg.sender) {
             revert OwnerError();
         }
@@ -82,15 +81,15 @@ contract BuySaySell is ERC721 {
         );
         story.sellPrice = price;
 
-        List.moveToHead(s_list, storyIndex);
+        List.moveToHead(sList, storyIndex);
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
-        if (storyIndex >= s_stories.length) {
+        if (storyIndex >= sStories.length) {
             revert UserArgError();
         }
 
-        Story storage story = s_stories[storyIndex];
+        Story storage story = sStories[storyIndex];
         if (story.owner != msg.sender) {
             revert OwnerError();
         }
@@ -107,18 +106,18 @@ contract BuySaySell is ERC721 {
         );
 
         if (price == 0) {
-            List.remove(s_list, storyIndex);
+            List.remove(sList, storyIndex);
         } else {
-            List.moveToHead(s_list, storyIndex);
+            List.moveToHead(sList, storyIndex);
         }
     }
 
     function agreeSellPrice(uint256 storyIndex) public payable {
-        if (storyIndex >= s_stories.length) {
+        if (storyIndex >= sStories.length) {
             revert UserArgError();
         }
 
-        Story storage story = s_stories[storyIndex];
+        Story storage story = sStories[storyIndex];
         address prevOwner = story.owner;
         if (prevOwner == msg.sender) {
             revert OwnerError();
@@ -148,10 +147,10 @@ contract BuySaySell is ERC721 {
 
         _safeTransfer(prevOwner, story.owner, story.index);
 
-        List.remove(s_list, storyIndex);
+        List.remove(sList, storyIndex);
 
-        s_balances[story.owner].push(storyIndex);
-        uint256[] storage prevList = s_balances[prevOwner];
+        sBalances[story.owner].push(storyIndex);
+        uint256[] storage prevList = sBalances[prevOwner];
         for (uint256 i = 0; i < prevList.length; i++) {
             if (prevList[i] == storyIndex) {
                 prevList[i] = prevList[prevList.length - 1];
@@ -166,25 +165,25 @@ contract BuySaySell is ERC721 {
         uint256 length
     ) public view returns (Story[] memory data, uint256 total) {
         (uint256[] memory indices, uint256 size) = List.get(
-            s_list,
+            sList,
             offset,
             length
         );
 
         Story[] memory result = new Story[](size);
         for (uint256 i = 0; i < size; i++) {
-            result[i] = s_stories[indices[i]];
+            result[i] = sStories[indices[i]];
         }
 
-        return (result, s_list.size);
+        return (result, sList.size);
     }
 
     function getStory(uint256 index) public view returns (Story memory) {
-        if (index >= s_stories.length) {
+        if (index >= sStories.length) {
             revert UserArgError();
         }
 
-        return s_stories[index];
+        return sStories[index];
     }
 
     function getBalance(
@@ -192,13 +191,13 @@ contract BuySaySell is ERC721 {
         uint256 offset,
         uint256 length
     ) public view returns (Story[] memory data, uint256 total) {
-        uint256[] storage list = s_balances[owner];
+        uint256[] storage list = sBalances[owner];
         Story[] memory result = new Story[](
             list.length - offset > length ? length : list.length - offset
         );
 
         for (uint256 i = 0; i < length && i + offset < list.length; i++) {
-            result[i] = s_stories[list[i + offset]];
+            result[i] = sStories[list[i + offset]];
         }
 
         return (result, list.length);

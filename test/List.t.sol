@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Test, console} from "forge-std/Test.sol";
-import "../src/List.sol";
+import {Test} from "forge-std/Test.sol";
+import {List} from "../src/List.sol";
 
 contract ListTest is Test {
     List.Entry list;
