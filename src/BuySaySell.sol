@@ -15,6 +15,9 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
     Story[] private sStories;
     List.Entry private sList;
     mapping(address owner => uint256[]) private sBalances;
+    mapping(uint256 tokenId => address) private sTokenApprovals;
+    mapping(address owner => mapping(address operator => bool))
+        private sOperatorApprovals;
 
     struct Comment {
         address owner;
@@ -301,19 +304,46 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
         safeTransferFrom(from, to, tokenId, "");
     }
 
-    function approve(address to, uint256 tokenId) external override {}
+    function approve(address to, uint256 tokenId) external override {
+        if (tokenId >= sStories.length) {
+            revert ERC721NonexistentToken(tokenId);
+        }
+
+        Story storage story = sStories[tokenId];
+
+        if (
+            msg.sender != story.owner &&
+            !isApprovedForAll(story.owner, msg.sender)
+        ) {
+            revert ERC721InvalidApprover(msg.sender);
+        }
+
+        sTokenApprovals[tokenId] = to;
+        emit Approval(msg.sender, to, tokenId);
+    }
 
     function setApprovalForAll(
         address operator,
         bool approved
-    ) external override {}
+    ) external override {
+        if (operator == address(0)) {
+            revert ERC721InvalidOperator(operator);
+        }
+
+        sOperatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
+    }
 
     function getApproved(
         uint256 tokenId
-    ) public view override returns (address operator) {}
+    ) public view override returns (address operator) {
+        return sTokenApprovals[tokenId];
+    }
 
     function isApprovedForAll(
         address owner,
         address operator
-    ) public view override returns (bool) {}
+    ) public view override returns (bool) {
+        return sOperatorApprovals[owner][operator];
+    }
 }
