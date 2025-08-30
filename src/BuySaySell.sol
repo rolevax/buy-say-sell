@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {IERC721Metadata} from "openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {List} from "./List.sol";
 
-contract BuySaySell is ERC721 {
+contract BuySaySell is IERC165, IERC721, IERC721Metadata {
+    using Strings for uint256;
+
     Story[] private sStories;
     List.Entry private sList;
     mapping(address owner => uint256[]) private sBalances;
@@ -29,7 +34,7 @@ contract BuySaySell is ERC721 {
         Comment[] comments;
     }
 
-    constructor() ERC721("Buy Say Sell", "BSS") {
+    constructor() {
         List.init(sList);
     }
 
@@ -50,7 +55,7 @@ contract BuySaySell is ERC721 {
             })
         );
 
-        _safeMint(story.owner, story.index);
+        // _safeMint(story.owner, story.index);
 
         List.insertHead(sList);
         sBalances[story.owner].push(story.index);
@@ -135,8 +140,7 @@ contract BuySaySell is ERC721 {
             revert TransferError();
         }
 
-        story.sellPrice = 0;
-        story.owner = msg.sender;
+        doTransfer(story, msg.sender);
         story.comments.push(
             Comment({
                 owner: msg.sender,
@@ -146,20 +150,27 @@ contract BuySaySell is ERC721 {
                 isLog: true
             })
         );
+    }
 
-        _safeTransfer(prevOwner, story.owner, story.index);
+    function doTransfer(Story storage story, address to) private {
+        address from = story.owner;
 
-        List.remove(sList, storyIndex);
+        story.sellPrice = 0;
+        story.owner = to;
 
-        sBalances[story.owner].push(storyIndex);
-        uint256[] storage prevList = sBalances[prevOwner];
+        List.remove(sList, story.index);
+
+        sBalances[to].push(story.index);
+        uint256[] storage prevList = sBalances[from];
         for (uint256 i = 0; i < prevList.length; i++) {
-            if (prevList[i] == storyIndex) {
+            if (prevList[i] == story.index) {
                 prevList[i] = prevList[prevList.length - 1];
                 prevList.pop();
                 break;
             }
         }
+
+        emit Transfer(from, to, story.index);
     }
 
     function getStories(
@@ -204,4 +215,77 @@ contract BuySaySell is ERC721 {
 
         return (result, list.length);
     }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId;
+    }
+
+    function name() external pure override returns (string memory) {
+        return "Buy Say Sell";
+    }
+
+    function symbol() external pure override returns (string memory) {
+        return "BSS";
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) external pure override returns (string memory) {
+        return tokenId.toString();
+    }
+
+    function balanceOf(
+        address owner
+    ) external view override returns (uint256 balance) {
+        return sBalances[owner].length;
+    }
+
+    function ownerOf(
+        uint256 tokenId
+    ) external view override returns (address owner) {
+        if (tokenId >= sStories.length) {
+            revert UserArgError();
+        }
+
+        return sStories[tokenId].owner;
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external override {}
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external override {}
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external override {}
+
+    function approve(address to, uint256 tokenId) external override {}
+
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) external override {}
+
+    function getApproved(
+        uint256 tokenId
+    ) external view override returns (address operator) {}
+
+    function isApprovedForAll(
+        address owner,
+        address operator
+    ) external view override returns (bool) {}
 }

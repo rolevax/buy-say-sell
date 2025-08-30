@@ -88,4 +88,15 @@ contract BuySaySellTest is Test {
         assertEq(s.comments[2].content, "bbb");
         assertEq(s.comments[2].owner, user2);
     }
+
+    function test_ERC721() public {
+        uint256 balance1 = bss.balanceOf(user1);
+        assertEq(balance1, 0);
+
+        vm.prank(user1);
+        bss.createStory("aaa", 123);
+
+        balance1 = bss.balanceOf(user1);
+        assertEq(balance1, 1);
+    }
 }
