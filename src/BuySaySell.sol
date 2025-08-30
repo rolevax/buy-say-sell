@@ -2,12 +2,14 @@
 pragma solidity ^0.8.28;
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {IERC721Errors} from "openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
+import {ERC721Utils} from "openzeppelin-contracts/contracts/token/ERC721/utils/ERC721Utils.sol";
 import {IERC721Metadata} from "openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {List} from "./List.sol";
 
-contract BuySaySell is IERC165, IERC721, IERC721Metadata {
+contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
     using Strings for uint256;
 
     Story[] private sStories;
@@ -22,8 +24,6 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata {
         bool isLog;
     }
 
-    error UserArgError();
-    error OwnerError();
     error PriceError();
     error TransferError();
 
@@ -67,12 +67,12 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata {
         uint256 price
     ) public {
         if (storyIndex >= sStories.length) {
-            revert UserArgError();
+            revert ERC721NonexistentToken(storyIndex);
         }
 
         Story storage story = sStories[storyIndex];
         if (story.owner != msg.sender) {
-            revert OwnerError();
+            revert ERC721InvalidSender(msg.sender);
         }
 
         story.comments.push(
@@ -93,12 +93,12 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata {
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
         if (storyIndex >= sStories.length) {
-            revert UserArgError();
+            revert ERC721NonexistentToken(storyIndex);
         }
 
         Story storage story = sStories[storyIndex];
         if (story.owner != msg.sender) {
-            revert OwnerError();
+            revert ERC721InvalidSender(msg.sender);
         }
 
         story.sellPrice = price;
@@ -121,13 +121,13 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata {
 
     function agreeSellPrice(uint256 storyIndex) public payable {
         if (storyIndex >= sStories.length) {
-            revert UserArgError();
+            revert ERC721NonexistentToken(storyIndex);
         }
 
         Story storage story = sStories[storyIndex];
         address prevOwner = story.owner;
         if (prevOwner == msg.sender) {
-            revert OwnerError();
+            revert ERC721InvalidSender(msg.sender);
         }
 
         uint256 price = story.sellPrice;
@@ -193,7 +193,7 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata {
 
     function getStory(uint256 index) public view returns (Story memory) {
         if (index >= sStories.length) {
-            revert UserArgError();
+            revert ERC721NonexistentToken(index);
         }
 
         return sStories[index];
@@ -248,30 +248,58 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata {
         uint256 tokenId
     ) external view override returns (address owner) {
         if (tokenId >= sStories.length) {
-            revert UserArgError();
+            revert ERC721NonexistentToken(tokenId);
         }
 
         return sStories[tokenId].owner;
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        if (to == address(0)) {
+            revert ERC721InvalidReceiver(address(0));
+        }
+
+        if (tokenId >= sStories.length) {
+            revert ERC721NonexistentToken(tokenId);
+        }
+
+        Story storage story = sStories[tokenId];
+        if (story.owner != from) {
+            revert ERC721IncorrectOwner(from, tokenId, story.owner);
+        }
+
+        address spender = msg.sender;
+        bool isAuth = from == spender ||
+            isApprovedForAll(from, spender) ||
+            getApproved(story.index) == spender;
+        if (!isAuth) {
+            revert ERC721InsufficientApproval(spender, story.index);
+        }
+
+        doTransfer(story, to);
     }
 
     function safeTransferFrom(
         address from,
         address to,
         uint256 tokenId,
-        bytes calldata data
-    ) external override {}
+        bytes memory data
+    ) public override {
+        transferFrom(from, to, tokenId);
+        ERC721Utils.checkOnERC721Received(msg.sender, from, to, tokenId, data);
+    }
 
     function safeTransferFrom(
         address from,
         address to,
         uint256 tokenId
-    ) external override {}
-
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external override {}
+    ) external override {
+        safeTransferFrom(from, to, tokenId, "");
+    }
 
     function approve(address to, uint256 tokenId) external override {}
 
@@ -282,10 +310,10 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata {
 
     function getApproved(
         uint256 tokenId
-    ) external view override returns (address operator) {}
+    ) public view override returns (address operator) {}
 
     function isApprovedForAll(
         address owner,
         address operator
-    ) external view override returns (bool) {}
+    ) public view override returns (bool) {}
 }
