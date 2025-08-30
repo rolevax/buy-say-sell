@@ -7,6 +7,7 @@ import {ERC721Utils} from "openzeppelin-contracts/contracts/token/ERC721/utils/E
 import {IERC721Metadata} from "openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {List} from "./List.sol";
 
 contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
@@ -238,7 +239,21 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
     function tokenURI(
         uint256 tokenId
     ) external pure override returns (string memory) {
-        return tokenId.toString();
+        bytes memory dataURI = abi.encodePacked(
+            "{",
+            '"name": "Buy Say Sell #',
+            tokenId.toString(),
+            '"',
+            "}"
+        );
+
+        return
+            string(
+                abi.encodePacked(
+                    "data:application/json;base64,",
+                    Base64.encode(dataURI)
+                )
+            );
     }
 
     function balanceOf(
