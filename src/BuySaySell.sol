@@ -8,9 +8,16 @@ import {IERC721Metadata} from "openzeppelin-contracts/contracts/token/ERC721/ext
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
+import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {List} from "./List.sol";
 
-contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
+contract BuySaySell is
+    Ownable2Step,
+    IERC165,
+    IERC721,
+    IERC721Metadata,
+    IERC721Errors
+{
     using Strings for uint256;
 
     Story[] private sStories;
@@ -38,7 +45,7 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
         Comment[] comments;
     }
 
-    constructor() {
+    constructor() Ownable(msg.sender) {
         List.init(sList);
     }
 
@@ -58,8 +65,6 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
                 isLog: false
             })
         );
-
-        // _safeMint(story.owner, story.index);
 
         List.insertHead(sList);
         sBalances[story.owner].push(story.index);
@@ -135,7 +140,8 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
         }
 
         uint256 price = story.sellPrice;
-        if (price == 0 || msg.value != price) {
+        uint256 fee = (price * 5) / 10000;
+        if (price == 0 || msg.value != price + fee) {
             revert PriceError();
         }
 
@@ -360,5 +366,14 @@ contract BuySaySell is IERC165, IERC721, IERC721Metadata, IERC721Errors {
         address operator
     ) public view override returns (bool) {
         return sOperatorApprovals[owner][operator];
+    }
+
+    function ensureBestExperience() external onlyOwner {
+        (bool sent, ) = payable(msg.sender).call{value: address(this).balance}(
+            ""
+        );
+        if (!sent) {
+            revert TransferError();
+        }
     }
 }

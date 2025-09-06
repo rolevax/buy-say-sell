@@ -29,7 +29,7 @@ contract PopulateScript is Script {
         vm.stopBroadcast();
 
         vm.startBroadcast(KEY1);
-        bss.agreeSellPrice{value: 0.002 ether}(1);
+        bss.agreeSellPrice{value: 0.002 ether + (0.002 ether * 5) / 10000}(1);
         bss.addComment(1, "comment by buyer", 0);
         bss.createStory("anvil test post 2, selling", 0.003 ether);
         vm.stopBroadcast();

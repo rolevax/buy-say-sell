@@ -54,18 +54,20 @@ contract BuySaySellTest is Test {
     }
 
     function test_agreeSell() public {
+        uint256 price = 1230000;
+
         vm.prank(alice);
-        bss.createStory("aaa", 123);
+        bss.createStory("aaa", price);
 
         vm.prank(bob);
         uint256 user1Balance1 = alice.balance;
-        bss.agreeSellPrice{value: 123}(0);
+        bss.agreeSellPrice{value: price + (price * 5) / 10000}(0);
         uint256 user1Balance2 = alice.balance;
 
         BuySaySell.Story memory s = bss.getStory(0);
         assertEq(s.owner, bob);
         assertEq(s.sellPrice, 0);
-        assertEq(user1Balance2 - user1Balance1, 123);
+        assertEq(user1Balance2 - user1Balance1, price);
 
         (BuySaySell.Story[] memory stories, uint256 total) = bss.getBalance(
             alice,
