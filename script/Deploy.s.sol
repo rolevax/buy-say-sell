@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {BuySaySell} from "../src/BuySaySell.sol";
 
-contract BuySaySellScript is Script {
+contract DeployScript is Script {
     BuySaySell public bss;
 
     function setUp() public {}

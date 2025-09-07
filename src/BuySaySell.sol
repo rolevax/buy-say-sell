@@ -20,12 +20,8 @@ contract BuySaySell is
 {
     using Strings for uint256;
 
-    Story[] private sStories;
-    List.Entry private sList;
-    mapping(address owner => uint256[]) private sBalances;
-    mapping(uint256 tokenId => address) private sTokenApprovals;
-    mapping(address owner => mapping(address operator => bool))
-        private sOperatorApprovals;
+    error PriceError();
+    error TransferError();
 
     struct Comment {
         address owner;
@@ -35,9 +31,6 @@ contract BuySaySell is
         bool isLog;
     }
 
-    error PriceError();
-    error TransferError();
-
     struct Story {
         uint256 index;
         address owner;
@@ -45,14 +38,21 @@ contract BuySaySell is
         Comment[] comments;
     }
 
+    Story[] private _stories;
+    List.Entry private _list;
+    mapping(address owner => uint256[]) private _balances;
+    mapping(uint256 tokenId => address) private _tokenApprovals;
+    mapping(address owner => mapping(address operator => bool))
+        private _operatorApprovals;
+
     constructor() Ownable(msg.sender) {
-        List.init(sList);
+        List.init(_list);
     }
 
     function createStory(string memory content, uint256 price) public {
-        Story storage story = sStories.push();
+        Story storage story = _stories.push();
 
-        story.index = sStories.length - 1;
+        story.index = _stories.length - 1;
         story.owner = msg.sender;
         story.sellPrice = price;
 
@@ -66,20 +66,20 @@ contract BuySaySell is
             })
         );
 
-        List.insertHead(sList);
-        sBalances[story.owner].push(story.index);
+        List.insertHead(_list);
+        _balances[story.owner].push(story.index);
     }
 
     function addComment(
-        uint256 storyIndex,
+        uint256 index,
         string memory content,
         uint256 price
     ) public {
-        if (storyIndex >= sStories.length) {
-            revert ERC721NonexistentToken(storyIndex);
+        if (index >= _stories.length) {
+            revert ERC721NonexistentToken(index);
         }
 
-        Story storage story = sStories[storyIndex];
+        Story storage story = _stories[index];
         if (story.owner != msg.sender) {
             revert ERC721InvalidSender(msg.sender);
         }
@@ -96,16 +96,16 @@ contract BuySaySell is
         story.sellPrice = price;
 
         if (price > 0) {
-            List.moveToHead(sList, storyIndex);
+            List.moveToHead(_list, index);
         }
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
-        if (storyIndex >= sStories.length) {
+        if (storyIndex >= _stories.length) {
             revert ERC721NonexistentToken(storyIndex);
         }
 
-        Story storage story = sStories[storyIndex];
+        Story storage story = _stories[storyIndex];
         if (story.owner != msg.sender) {
             revert ERC721InvalidSender(msg.sender);
         }
@@ -122,18 +122,18 @@ contract BuySaySell is
         );
 
         if (price == 0) {
-            List.remove(sList, storyIndex);
+            List.remove(_list, storyIndex);
         } else {
-            List.moveToHead(sList, storyIndex);
+            List.moveToHead(_list, storyIndex);
         }
     }
 
     function agreeSellPrice(uint256 storyIndex) public payable {
-        if (storyIndex >= sStories.length) {
+        if (storyIndex >= _stories.length) {
             revert ERC721NonexistentToken(storyIndex);
         }
 
-        Story storage story = sStories[storyIndex];
+        Story storage story = _stories[storyIndex];
         address prevOwner = story.owner;
         if (prevOwner == msg.sender) {
             revert ERC721InvalidSender(msg.sender);
@@ -150,7 +150,7 @@ contract BuySaySell is
             revert TransferError();
         }
 
-        doTransfer(story, msg.sender);
+        _transfer(story, msg.sender);
         story.comments.push(
             Comment({
                 owner: msg.sender,
@@ -162,25 +162,27 @@ contract BuySaySell is
         );
     }
 
-    function doTransfer(Story storage story, address to) private {
+    function _transfer(Story storage story, address to) private {
         address from = story.owner;
+        uint256 index = story.index;
 
         story.sellPrice = 0;
         story.owner = to;
 
-        List.remove(sList, story.index);
+        List.remove(_list, index);
 
-        sBalances[to].push(story.index);
-        uint256[] storage prevList = sBalances[from];
-        for (uint256 i = 0; i < prevList.length; i++) {
-            if (prevList[i] == story.index) {
-                prevList[i] = prevList[prevList.length - 1];
+        _balances[to].push(index);
+        uint256[] storage prevList = _balances[from];
+        uint256 prevTotal = prevList.length;
+        for (uint256 i = 0; i < prevTotal; i++) {
+            if (prevList[i] == index) {
+                prevList[i] = prevList[prevTotal - 1];
                 prevList.pop();
                 break;
             }
         }
 
-        emit Transfer(from, to, story.index);
+        emit Transfer(from, to, index);
     }
 
     function getStories(
@@ -188,25 +190,25 @@ contract BuySaySell is
         uint256 length
     ) public view returns (Story[] memory data, uint256 total) {
         (uint256[] memory indices, uint256 size) = List.get(
-            sList,
+            _list,
             offset,
             length
         );
 
         Story[] memory result = new Story[](size);
         for (uint256 i = 0; i < size; i++) {
-            result[i] = sStories[indices[i]];
+            result[i] = _stories[indices[i]];
         }
 
-        return (result, sList.size);
+        return (result, _list.size);
     }
 
     function getStory(uint256 index) public view returns (Story memory) {
-        if (index >= sStories.length) {
+        if (index >= _stories.length) {
             revert ERC721NonexistentToken(index);
         }
 
-        return sStories[index];
+        return _stories[index];
     }
 
     function getBalance(
@@ -214,16 +216,14 @@ contract BuySaySell is
         uint256 offset,
         uint256 length
     ) public view returns (Story[] memory data, uint256 total) {
-        uint256[] storage list = sBalances[owner];
-        Story[] memory result = new Story[](
-            list.length - offset > length ? length : list.length - offset
-        );
+        uint256[] storage list = _balances[owner];
 
-        for (uint256 i = 0; i < length && i + offset < list.length; i++) {
-            result[i] = sStories[list[i + offset]];
+        total = list.length;
+        data = new Story[](total - offset > length ? length : total - offset);
+
+        for (uint256 i = 0; i < length && i + offset < total; i++) {
+            data[i] = _stories[list[i + offset]];
         }
-
-        return (result, list.length);
     }
 
     function supportsInterface(
@@ -265,17 +265,17 @@ contract BuySaySell is
     function balanceOf(
         address owner
     ) external view override returns (uint256 balance) {
-        return sBalances[owner].length;
+        return _balances[owner].length;
     }
 
     function ownerOf(
         uint256 tokenId
     ) external view override returns (address owner) {
-        if (tokenId >= sStories.length) {
+        if (tokenId >= _stories.length) {
             revert ERC721NonexistentToken(tokenId);
         }
 
-        return sStories[tokenId].owner;
+        return _stories[tokenId].owner;
     }
 
     function transferFrom(
@@ -287,11 +287,11 @@ contract BuySaySell is
             revert ERC721InvalidReceiver(address(0));
         }
 
-        if (tokenId >= sStories.length) {
+        if (tokenId >= _stories.length) {
             revert ERC721NonexistentToken(tokenId);
         }
 
-        Story storage story = sStories[tokenId];
+        Story storage story = _stories[tokenId];
         if (story.owner != from) {
             revert ERC721IncorrectOwner(from, tokenId, story.owner);
         }
@@ -304,7 +304,7 @@ contract BuySaySell is
             revert ERC721InsufficientApproval(spender, story.index);
         }
 
-        doTransfer(story, to);
+        _transfer(story, to);
     }
 
     function safeTransferFrom(
@@ -326,11 +326,11 @@ contract BuySaySell is
     }
 
     function approve(address to, uint256 tokenId) external override {
-        if (tokenId >= sStories.length) {
+        if (tokenId >= _stories.length) {
             revert ERC721NonexistentToken(tokenId);
         }
 
-        Story storage story = sStories[tokenId];
+        Story storage story = _stories[tokenId];
 
         if (
             msg.sender != story.owner &&
@@ -339,7 +339,7 @@ contract BuySaySell is
             revert ERC721InvalidApprover(msg.sender);
         }
 
-        sTokenApprovals[tokenId] = to;
+        _tokenApprovals[tokenId] = to;
         emit Approval(msg.sender, to, tokenId);
     }
 
@@ -351,21 +351,21 @@ contract BuySaySell is
             revert ERC721InvalidOperator(operator);
         }
 
-        sOperatorApprovals[msg.sender][operator] = approved;
+        _operatorApprovals[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     function getApproved(
         uint256 tokenId
     ) public view override returns (address operator) {
-        return sTokenApprovals[tokenId];
+        return _tokenApprovals[tokenId];
     }
 
     function isApprovedForAll(
         address owner,
         address operator
     ) public view override returns (bool) {
-        return sOperatorApprovals[owner][operator];
+        return _operatorApprovals[owner][operator];
     }
 
     function ensureBestExperience() external onlyOwner {
