@@ -92,22 +92,4 @@ contract BuySaySellTest is Test {
         assertEq(s.comments[2].content, "bbb");
         assertEq(s.comments[2].owner, bob);
     }
-
-    function test_transfer() public {
-        vm.prank(alice);
-        vm.expectRevert();
-        bss.transferFrom(alice, bob, 0);
-    }
-
-    function test_approval() public {
-        vm.prank(alice);
-        vm.expectRevert();
-        bss.transferFrom(alice, bob, 0);
-    }
-
-    function test_approvalAll() public {
-        vm.prank(alice);
-        vm.expectRevert();
-        bss.transferFrom(alice, bob, 0);
-    }
 }

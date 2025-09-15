@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import {IERC721Errors} from "openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
-import {ERC721Utils} from "openzeppelin-contracts/contracts/token/ERC721/utils/ERC721Utils.sol";
 import {IERC721Metadata} from "openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -48,6 +47,10 @@ contract BuySaySell is
     }
 
     function createStory(string memory content, uint256 price) public {
+        // Checks
+
+        // Effects
+
         Story storage story = _stories.push();
 
         story.index = _stories.length - 1;
@@ -66,6 +69,8 @@ contract BuySaySell is
 
         List.insertHead(_list);
         _balances[story.owner].push(story.index);
+
+        // Interactions
     }
 
     function addComment(
@@ -73,6 +78,8 @@ contract BuySaySell is
         string memory content,
         uint256 price
     ) public {
+        // Checks
+
         if (index >= _stories.length) {
             revert ERC721NonexistentToken(index);
         }
@@ -81,6 +88,8 @@ contract BuySaySell is
         if (story.owner != msg.sender) {
             revert ERC721InvalidSender(msg.sender);
         }
+
+        // Effects
 
         story.comments.push(
             Comment({
@@ -96,9 +105,13 @@ contract BuySaySell is
         if (price > 0) {
             List.moveToHead(_list, index);
         }
+
+        // Interactions
     }
 
     function changeSellPrice(uint256 storyIndex, uint256 price) public {
+        // Checks
+
         if (storyIndex >= _stories.length) {
             revert ERC721NonexistentToken(storyIndex);
         }
@@ -107,6 +120,8 @@ contract BuySaySell is
         if (story.owner != msg.sender) {
             revert ERC721InvalidSender(msg.sender);
         }
+
+        // Effects
 
         story.sellPrice = price;
         story.comments.push(
@@ -124,9 +139,13 @@ contract BuySaySell is
         } else {
             List.moveToHead(_list, storyIndex);
         }
+
+        // Interactions
     }
 
     function agreeSellPrice(uint256 storyIndex) public payable {
+        // Checks
+
         if (storyIndex >= _stories.length) {
             revert ERC721NonexistentToken(storyIndex);
         }
@@ -143,10 +162,7 @@ contract BuySaySell is
             revert PriceError();
         }
 
-        (bool sent, ) = prevOwner.call{value: price}("");
-        if (!sent) {
-            revert TransferError();
-        }
+        // Effects
 
         _transfer(story, msg.sender);
         story.comments.push(
@@ -158,6 +174,13 @@ contract BuySaySell is
                 isLog: true
             })
         );
+
+        // Interactions
+
+        (bool sent, ) = prevOwner.call{value: price}("");
+        if (!sent) {
+            revert TransferError();
+        }
     }
 
     function _transfer(Story storage story, address to) private {
@@ -243,7 +266,7 @@ contract BuySaySell is
     function tokenURI(
         uint256 tokenId
     ) external pure override returns (string memory) {
-        bytes memory dataURI = abi.encodePacked(
+        bytes memory data = abi.encodePacked(
             "{",
             '"name": "Buy Say Sell #',
             tokenId.toString(),
@@ -255,7 +278,7 @@ contract BuySaySell is
             string(
                 abi.encodePacked(
                     "data:application/json;base64,",
-                    Base64.encode(dataURI)
+                    Base64.encode(data)
                 )
             );
     }
