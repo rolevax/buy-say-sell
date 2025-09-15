@@ -22,6 +22,7 @@ contract BuySaySell is
 
     error PriceError();
     error TransferError();
+    error NotSupportedError();
 
     struct Comment {
         address owner;
@@ -41,9 +42,6 @@ contract BuySaySell is
     Story[] private _stories;
     List.Entry private _list;
     mapping(address owner => uint256[]) private _balances;
-    mapping(uint256 tokenId => address) private _tokenApprovals;
-    mapping(address owner => mapping(address operator => bool))
-        private _operatorApprovals;
 
     constructor() Ownable(msg.sender) {
         List.init(_list);
@@ -278,94 +276,46 @@ contract BuySaySell is
         return _stories[tokenId].owner;
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override {
-        if (to == address(0)) {
-            revert ERC721InvalidReceiver(address(0));
-        }
-
-        if (tokenId >= _stories.length) {
-            revert ERC721NonexistentToken(tokenId);
-        }
-
-        Story storage story = _stories[tokenId];
-        if (story.owner != from) {
-            revert ERC721IncorrectOwner(from, tokenId, story.owner);
-        }
-
-        address spender = msg.sender;
-        bool isAuth = from == spender ||
-            isApprovedForAll(from, spender) ||
-            getApproved(story.index) == spender;
-        if (!isAuth) {
-            revert ERC721InsufficientApproval(spender, story.index);
-        }
-
-        _transfer(story, to);
+    function transferFrom(address, address, uint256) public pure override {
+        revert NotSupportedError();
     }
 
     function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public override {
-        transferFrom(from, to, tokenId);
-        ERC721Utils.checkOnERC721Received(msg.sender, from, to, tokenId, data);
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) public pure override {
+        revert NotSupportedError();
     }
 
     function safeTransferFrom(
         address from,
         address to,
         uint256 tokenId
-    ) external override {
+    ) external pure override {
         safeTransferFrom(from, to, tokenId, "");
     }
 
-    function approve(address to, uint256 tokenId) external override {
-        if (tokenId >= _stories.length) {
-            revert ERC721NonexistentToken(tokenId);
-        }
-
-        Story storage story = _stories[tokenId];
-
-        if (
-            msg.sender != story.owner &&
-            !isApprovedForAll(story.owner, msg.sender)
-        ) {
-            revert ERC721InvalidApprover(msg.sender);
-        }
-
-        _tokenApprovals[tokenId] = to;
-        emit Approval(msg.sender, to, tokenId);
+    function approve(address, uint256) external pure override {
+        revert NotSupportedError();
     }
 
-    function setApprovalForAll(
-        address operator,
-        bool approved
-    ) external override {
-        if (operator == address(0)) {
-            revert ERC721InvalidOperator(operator);
-        }
-
-        _operatorApprovals[msg.sender][operator] = approved;
-        emit ApprovalForAll(msg.sender, operator, approved);
+    function setApprovalForAll(address, bool) external pure override {
+        revert NotSupportedError();
     }
 
     function getApproved(
-        uint256 tokenId
-    ) public view override returns (address operator) {
-        return _tokenApprovals[tokenId];
+        uint256
+    ) public pure override returns (address operator) {
+        return address(0);
     }
 
     function isApprovedForAll(
-        address owner,
-        address operator
-    ) public view override returns (bool) {
-        return _operatorApprovals[owner][operator];
+        address,
+        address
+    ) public pure override returns (bool) {
+        return false;
     }
 
     function ensureBestExperience() external onlyOwner {

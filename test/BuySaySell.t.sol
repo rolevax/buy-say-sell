@@ -94,71 +94,20 @@ contract BuySaySellTest is Test {
     }
 
     function test_transfer() public {
-        uint256 balance1 = bss.balanceOf(alice);
-        assertEq(balance1, 0);
-
         vm.prank(alice);
-        bss.createStory("aaa", 123);
-
-        balance1 = bss.balanceOf(alice);
-        assertEq(balance1, 1);
-
         vm.expectRevert();
         bss.transferFrom(alice, bob, 0);
-
-        vm.prank(alice);
-        bss.transferFrom(alice, bob, 0);
-
-        balance1 = bss.balanceOf(alice);
-        assertEq(balance1, 0);
-        uint256 balance2 = bss.balanceOf(bob);
-        assertEq(balance2, 1);
     }
 
     function test_approval() public {
         vm.prank(alice);
-        bss.createStory("aaa", 123);
-
         vm.expectRevert();
-        vm.prank(carol);
         bss.transferFrom(alice, bob, 0);
-
-        vm.expectRevert();
-        bss.approve(carol, 0);
-
-        vm.prank(alice);
-        bss.approve(carol, 0);
-
-        vm.prank(carol);
-        bss.transferFrom(alice, bob, 0);
-
-        uint256 balance1 = bss.balanceOf(alice);
-        assertEq(balance1, 0);
-        uint256 balance2 = bss.balanceOf(bob);
-        assertEq(balance2, 1);
-        uint256 balance3 = bss.balanceOf(carol);
-        assertEq(balance3, 0);
     }
 
     function test_approvalAll() public {
         vm.prank(alice);
-        bss.createStory("aaa", 123);
-
         vm.expectRevert();
-        vm.prank(carol);
         bss.transferFrom(alice, bob, 0);
-
-        vm.prank(alice);
-        bss.setApprovalForAll(carol, true);
-
-        vm.prank(carol);
-        bss.transferFrom(alice, bob, 0);
-
-        uint256 balance1 = bss.balanceOf(alice);
-        assertEq(balance1, 0);
-        uint256 balance2 = bss.balanceOf(bob);
-        assertEq(balance2, 1);
-        uint256 balance3 = bss.balanceOf(carol);
-        assertEq(balance3, 0);
     }
 }
