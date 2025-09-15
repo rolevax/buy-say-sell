@@ -22,7 +22,7 @@ contract MoreDataScript is Script {
         vm.startBroadcast(KEY0);
 
         for (uint256 i = 0; i < 100; i++) {
-            bss.createStory(
+            bss.create(
                 string.concat("anvil test post ", Strings.toString(i)),
                 0.002 ether
             );

@@ -22,7 +22,7 @@ contract BuySaySellTest is Test {
     function test_createStory() public {
         vm.prank(alice);
 
-        bss.createStory("aaa", 114514);
+        bss.create("aaa", 114514);
         (BuySaySell.Story[] memory stories, uint256 total) = bss.getStories(
             0,
             10
@@ -44,8 +44,8 @@ contract BuySaySellTest is Test {
     function test_changeSellPrice() public {
         vm.startPrank(alice);
 
-        bss.createStory("aaa", 1);
-        bss.changeSellPrice(0, 123);
+        bss.create("aaa", 1);
+        bss.changePrice(0, 123);
 
         vm.stopPrank();
 
@@ -57,11 +57,11 @@ contract BuySaySellTest is Test {
         uint256 price = 1230000;
 
         vm.prank(alice);
-        bss.createStory("aaa", price);
+        bss.create("aaa", price);
 
         vm.prank(bob);
         uint256 user1Balance1 = alice.balance;
-        bss.agreeSellPrice{value: price + (price * 5) / 10000}(0);
+        bss.buy{value: price + (price * 5) / 10000}(0);
         uint256 user1Balance2 = alice.balance;
 
         BuySaySell.Story memory s = bss.getStory(0);

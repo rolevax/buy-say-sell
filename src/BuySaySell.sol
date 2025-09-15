@@ -46,7 +46,7 @@ contract BuySaySell is
         List.init(_list);
     }
 
-    function createStory(string memory content, uint256 price) public {
+    function create(string memory content, uint256 price) public {
         // Checks
 
         // Effects
@@ -109,7 +109,7 @@ contract BuySaySell is
         // Interactions
     }
 
-    function changeSellPrice(uint256 storyIndex, uint256 price) public {
+    function changePrice(uint256 storyIndex, uint256 price) public {
         // Checks
 
         if (storyIndex >= _stories.length) {
@@ -143,7 +143,7 @@ contract BuySaySell is
         // Interactions
     }
 
-    function agreeSellPrice(uint256 storyIndex) public payable {
+    function buy(uint256 storyIndex) public payable {
         // Checks
 
         if (storyIndex >= _stories.length) {
@@ -206,6 +206,7 @@ contract BuySaySell is
         emit Transfer(from, to, index);
     }
 
+    // Get paged stories in the market
     function getStories(
         uint256 offset,
         uint256 length
@@ -232,6 +233,7 @@ contract BuySaySell is
         return _stories[index];
     }
 
+    // Get paged stories owned by a user
     function getBalance(
         address owner,
         uint256 offset,
@@ -299,6 +301,8 @@ contract BuySaySell is
         return _stories[tokenId].owner;
     }
 
+    // Override ERC-721 interface to display in wallet or market apps
+    // Not actually implementing for reducing risks
     function transferFrom(address, address, uint256) public pure override {
         revert NotSupportedError();
     }
