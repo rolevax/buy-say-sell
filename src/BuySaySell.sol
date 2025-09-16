@@ -75,6 +75,7 @@ contract BuySaySell is
 
         List.insertHead(_list);
         _balances[story.owner].push(story.index);
+        emit Transfer(address(0), story.owner, story.index);
 
         // Interactions
     }
