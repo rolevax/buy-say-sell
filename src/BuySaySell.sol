@@ -38,14 +38,20 @@ contract BuySaySell is
         Comment[] comments;
     }
 
+    // Array of all stories
     Story[] private _stories;
+
+    // Linked list of stories in the market
     List.Entry private _list;
+
+    // Stories owned by each user
     mapping(address owner => uint256[]) private _balances;
 
     constructor() Ownable(msg.sender) {
         List.init(_list);
     }
 
+    // Create a new story
     function create(string memory content, uint256 price) public {
         // Checks
 
@@ -73,6 +79,7 @@ contract BuySaySell is
         // Interactions
     }
 
+    // ADd comment to a story and set its listing price
     function addComment(
         uint256 index,
         string memory content,
@@ -109,6 +116,7 @@ contract BuySaySell is
         // Interactions
     }
 
+    // Change listing price of a story
     function changePrice(uint256 storyIndex, uint256 price) public {
         // Checks
 
@@ -143,6 +151,7 @@ contract BuySaySell is
         // Interactions
     }
 
+    // Buy a listed story
     function buy(uint256 storyIndex) public payable {
         // Checks
 
@@ -225,6 +234,7 @@ contract BuySaySell is
         return (result, _list.size);
     }
 
+    // Get one story by index
     function getStory(uint256 index) public view returns (Story memory) {
         if (index >= _stories.length) {
             revert ERC721NonexistentToken(index);
@@ -249,6 +259,7 @@ contract BuySaySell is
         }
     }
 
+    // ERC-165
     function supportsInterface(
         bytes4 interfaceId
     ) public view virtual override(IERC165) returns (bool) {
@@ -257,14 +268,17 @@ contract BuySaySell is
             interfaceId == type(IERC721Metadata).interfaceId;
     }
 
+    // ERC-721 metadata
     function name() external pure override returns (string memory) {
         return "Buy Say Sell";
     }
 
+    // ERC-721 metadata
     function symbol() external pure override returns (string memory) {
         return "BSS";
     }
 
+    // ERC-721 metadata
     function tokenURI(
         uint256 tokenId
     ) external pure override returns (string memory) {
@@ -285,12 +299,14 @@ contract BuySaySell is
             );
     }
 
+    // ERC-721
     function balanceOf(
         address owner
     ) external view override returns (uint256 balance) {
         return _balances[owner].length;
     }
 
+    // ERC-721
     function ownerOf(
         uint256 tokenId
     ) external view override returns (address owner) {
@@ -301,12 +317,14 @@ contract BuySaySell is
         return _stories[tokenId].owner;
     }
 
-    // Override ERC-721 interface to display in wallet or market apps
-    // Not actually implementing for reducing risks
+    // ERC-721
+    // Override ERC-721 interface to display in wallets or market apps
+    // Not actually implementing for avoiding risks
     function transferFrom(address, address, uint256) public pure override {
         revert NotSupportedError();
     }
 
+    // ERC-721
     function safeTransferFrom(
         address,
         address,
@@ -316,6 +334,7 @@ contract BuySaySell is
         revert NotSupportedError();
     }
 
+    // ERC-721
     function safeTransferFrom(
         address from,
         address to,
@@ -324,20 +343,24 @@ contract BuySaySell is
         safeTransferFrom(from, to, tokenId, "");
     }
 
+    // ERC-721
     function approve(address, uint256) external pure override {
         revert NotSupportedError();
     }
 
+    // ERC-721
     function setApprovalForAll(address, bool) external pure override {
         revert NotSupportedError();
     }
 
+    // ERC-721
     function getApproved(
         uint256
     ) public pure override returns (address operator) {
         return address(0);
     }
 
+    // ERC-721
     function isApprovedForAll(
         address,
         address
@@ -345,6 +368,7 @@ contract BuySaySell is
         return false;
     }
 
+    // Withdraw
     function ensureBestExperience() external onlyOwner {
         (bool sent, ) = payable(msg.sender).call{value: address(this).balance}(
             ""
